@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+    
+    nginx:
+        image: nginx:latest
+        ports:
+            - "80:80"
+        volumes:
+            - ${APP_PATH}:/var/www/html
+            - ${NGINX_CONF}:/etc/nginx/conf.d
+        depends_on: 
+            - workspace
+            - phpmyadmin
+
+    workspace:
+        build: ./workspace
+        container_name: ${NAMESPACE}_WORKSPACE
+        volumes: 
+            - ${APP_PATH}:/var/www/html
+    
+    mysql:
+        image: mysql:8.0
+        command: --default-authentication-plugin=mysql_native_password
+        restart: always
+        environment:
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        volumes: 
+            - ${MYSQL_STORAGE_PATH}:/var/lib/mysql
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        restart: always
+        ports:
+            - '7000:80'
+        depends_on:
+            - mysql
+        environment:
+            PMA_HOST: mysql
+            PMA_PORT: 3306
+            PMA_ARBITRARY: 1
+            
